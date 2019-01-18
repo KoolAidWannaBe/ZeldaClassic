@@ -106,6 +106,7 @@ namespace ZScript
 	class ASTExprEQ;
 	class ASTExprNE;
 	class ASTAddExpr; // virtual
+	class ASTExprTriComp;
 	class ASTExprPlus;
 	class ASTExprMinus;
 	class ASTMultExpr; // virtual
@@ -1195,6 +1196,21 @@ namespace ZScript
 
 		DataType const* getReadType() const {return &DataType::FLOAT;}
 		DataType const* getWriteType() const {return NULL;}
+	};
+	
+	class ASTExprTriComp : public ASTAddExpr
+	{
+	public:
+		ASTExprTriComp(ASTExpr* left = NULL,
+		          ASTExpr* right = NULL,
+		          LocationData const& location = LocationData::NONE);
+		ASTExprTriComp* clone() const {return new ASTExprTriComp(*this);}
+
+		void execute(ASTVisitor& visitor, void* param = NULL);
+
+		optional<long> getCompileTimeValue(
+				CompileErrorHandler* errorHandler = NULL)
+				const;
 	};
 
 	class ASTExprPlus : public ASTAddExpr

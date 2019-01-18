@@ -12072,6 +12072,14 @@ void do_seta(const byte a)
 ///----------------------------------------------------------------------------------------------------//
 //Mathematical
 
+void do_tric(const bool v)
+{
+    long temp = SH::get_arg(sarg2, v);
+    long temp2 = get_register(sarg1);
+    
+    set_register(sarg1, (temp2 < temp) ? -10000L : (temp2 > temp) ? 10000L : 0L);
+}
+
 void do_add(const bool v)
 {
     long temp = SH::get_arg(sarg2, v);
@@ -15851,7 +15859,11 @@ int run_script(const byte type, const word script, const long i)
 		    do_getitemscript();
 		    break;
 		    
-		    
+			
+		case TRICR:
+			do_tric(false);
+			break;
+			
 		case ADDV:
 		    do_add(true);
 		    break;

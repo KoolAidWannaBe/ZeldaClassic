@@ -117,6 +117,8 @@ namespace ZScript
 			caseDefault(host, param);}
 		virtual void caseExprNE(ASTExprNE& host, void* param = NULL) {
 			caseDefault(host, param);}
+		virtual void caseExprTriComp(ASTExprTriComp& host, void* param = NULL) {
+			caseDefault(host, param);}
 		virtual void caseExprPlus(ASTExprPlus& host, void* param = NULL) {
 			caseDefault(host, param);}
 		virtual void caseExprMinus(ASTExprMinus& host, void* param = NULL) {
@@ -247,6 +249,7 @@ namespace ZScript
 		virtual void caseExprLE(ASTExprLE& host, void* param = NULL);
 		virtual void caseExprEQ(ASTExprEQ& host, void* param = NULL);
 		virtual void caseExprNE(ASTExprNE& host, void* param = NULL);
+		virtual void caseExprTriComp(ASTExprTriComp& host, void* param = NULL);
 		virtual void caseExprPlus(ASTExprPlus& host, void* param = NULL);
 		virtual void caseExprMinus(ASTExprMinus& host, void* param = NULL);
 		virtual void caseExprTimes(ASTExprTimes& host, void* param = NULL);

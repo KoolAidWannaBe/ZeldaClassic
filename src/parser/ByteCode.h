@@ -1338,6 +1338,17 @@ namespace ZScript
 		}
 	};
 
+	class OTriCompRegister : public BinaryOpcode
+	{
+	public:
+		OTriCompRegister(Argument *A, Argument *B) : BinaryOpcode(A,B) {}
+		string toString();
+		Opcode *clone()
+		{
+			return new OTriCompRegister(a->clone(),b->clone());
+		}
+	};
+
 	class OAddImmediate : public BinaryOpcode
 	{
 	public:

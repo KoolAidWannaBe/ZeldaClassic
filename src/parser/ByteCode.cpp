@@ -1790,6 +1790,11 @@ string OSetRegister::toString()
     return "SETR " + getFirstArgument()->toString() + "," + getSecondArgument()->toString();
 }
 
+string OTriCompRegister::toString()
+{
+    return "TRICR " + getFirstArgument()->toString() + "," + getSecondArgument()->toString();
+}
+
 string OAddImmediate::toString()
 {
     return "ADDV " + getFirstArgument()->toString() + "," + getSecondArgument()->toString();

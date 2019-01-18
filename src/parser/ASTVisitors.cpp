@@ -343,6 +343,13 @@ void RecursiveVisitor::caseExprNE(ASTExprNE& host, void* param)
 	visit(host.right.get(), param);
 }
 
+void RecursiveVisitor::caseExprTriComp(ASTExprTriComp& host, void* param)
+{
+	visit(host.left.get(), param);
+	if (breakRecursion(host, param)) return;
+	visit(host.right.get(), param);
+}
+
 void RecursiveVisitor::caseExprPlus(ASTExprPlus& host, void* param)
 {
 	visit(host.left.get(), param);

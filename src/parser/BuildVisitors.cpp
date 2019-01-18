@@ -903,6 +903,22 @@ void BuildOpcodes::caseExprNE(ASTExprNE& host, void* param)
     addOpcode(new OSetFalse(new VarArgument(EXP1)));
 }
 
+void BuildOpcodes::caseExprTriComp(ASTExprTriComp& host, void* param)
+{
+    if (host.getCompileTimeValue())
+    {
+        addOpcode(new OSetImmediate(new VarArgument(EXP1), new LiteralArgument(*host.getCompileTimeValue(this))));
+        return;
+    }
+
+    // Compute both sides.
+    visit(host.left.get(), param);
+    addOpcode(new OPushRegister(new VarArgument(EXP1)));
+    visit(host.right.get(), param);
+    addOpcode(new OPopRegister(new VarArgument(EXP2)));
+    addOpcode(new OTriCompRegister(new VarArgument(EXP1), new VarArgument(EXP2)));
+}
+
 void BuildOpcodes::caseExprPlus(ASTExprPlus& host, void* param)
 {
     if (host.getCompileTimeValue())

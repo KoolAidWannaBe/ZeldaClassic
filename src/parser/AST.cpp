@@ -1192,6 +1192,30 @@ ASTAddExpr::ASTAddExpr(
 	: ASTBinaryExpr(left, right, location)
 {}
 
+// ASTExprTriComp
+
+ASTExprTriComp::ASTExprTriComp(
+		ASTExpr* left, ASTExpr* right, LocationData const& location)
+	: ASTAddExpr(left, right, location)
+{}
+
+void ASTExprTriComp::execute(ASTVisitor& visitor, void* param)
+{
+	visitor.caseExprTriComp(*this, param);
+}
+
+optional<long> ASTExprTriComp::getCompileTimeValue(
+		CompileErrorHandler* errorHandler)
+		const
+{
+	if (!left || !right) return nullopt;
+	optional<long> leftValue = left->getCompileTimeValue(errorHandler);
+	if (!leftValue) return nullopt;
+	optional<long> rightValue = right->getCompileTimeValue(errorHandler);
+	if (!rightValue) return nullopt;
+	return ((*leftValue < *rightValue) ? -10000L : (*leftValue > *rightValue) ? 10000L : 0L);
+}
+
 // ASTExprPlus
 
 ASTExprPlus::ASTExprPlus(

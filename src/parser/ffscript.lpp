@@ -140,6 +140,7 @@ link	TOKEN( LINK );
 "-"		TOKEN( MINUS );
 "<<"		TOKEN( LSHIFT );
 ">>"		TOKEN( RSHIFT );
+"<=>"		TOKEN( TRICOMP );
 "<"		TOKEN( LT );
 "<="		TOKEN( LE );
 ">"		TOKEN( GT );
