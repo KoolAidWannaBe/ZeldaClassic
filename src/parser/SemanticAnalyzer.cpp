@@ -25,7 +25,7 @@ SemanticAnalyzer::SemanticAnalyzer(Program& program)
 {
 	scope = &program.getScope();
 	caseFile(program.getRoot());
-	assert(dynamic_cast<RootScope*>(scope));
+	assert(dynamic_cast<GlobalScope*>(scope));
 
 	// Analyze function internals.
 	vector<Function*> functions = program.getUserGlobalFunctions();

@@ -31,7 +31,7 @@ namespace ZScript
 
 	// Local forward declarations
 	class ZClass;
-	class RootScope;
+	class GlobalScope;
 	class FileScope;
 	class ScriptScope;
 	class FunctionScope;
@@ -165,7 +165,7 @@ namespace ZScript
 			Scope const&, std::vector<std::string> const& names);
 
 	// Get the most distant parent.
-	RootScope* getRoot(Scope const&);
+	GlobalScope* getRoot(Scope const&);
 	
 	////////////////
 	// Lookup
@@ -385,17 +385,17 @@ namespace ZScript
 	};
 
 	////////////////////////////////////////////////////////////////
-	// RootScope - The highest level scope.
+	// GlobalScope - The highest level scope.
 
 	// For the purpose of resolving data, functions, etc. the root scope has
 	// counts as locally having the objects of all its FileScope
 	// descendants. These lists are maintained locally in the desc*
 	// variables.
 
-	class RootScope : public BasicScope
+	class GlobalScope : public BasicScope
 	{
 	public:
-		RootScope(TypeStore&);
+		GlobalScope(TypeStore&);
 		
 		virtual bool isGlobal() const {return true;}
 		virtual optional<int> getRootStackSize() const;

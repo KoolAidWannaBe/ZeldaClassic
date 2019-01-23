@@ -78,12 +78,12 @@ vector<Scope*> ZScript::lookupScopes(Scope const& scope, vector<string> const& n
 	return scopes;
 }
 
-RootScope* ZScript::getRoot(Scope const& scope)
+GlobalScope* ZScript::getRoot(Scope const& scope)
 {
 	Scope* current = const_cast<Scope*>(&scope);
 	while (Scope* parent = current->getParent())
 		current = parent;
-	return dynamic_cast<RootScope*>(current);
+	return dynamic_cast<GlobalScope*>(current);
 }
 
 // Lookup
@@ -639,7 +639,7 @@ bool FileScope::add(Datum& datum, CompileErrorHandler* errorHandler)
 }
 
 ////////////////////////////////////////////////////////////////
-// RootScope
+// GlobalScope
 
 namespace // file local
 {
@@ -657,7 +657,7 @@ namespace // file local
 	}
 };
 
-RootScope::RootScope(TypeStore& typeStore)
+GlobalScope::GlobalScope(TypeStore& typeStore)
 	: BasicScope(typeStore, "root")
 {
 	// Add global library functions.
@@ -703,11 +703,11 @@ RootScope::RootScope(TypeStore& typeStore)
 	BuiltinConstant::create(*this, DataType::CHEATS, "Cheats", 0);
 }
 
-optional<int> RootScope::getRootStackSize() const
+optional<int> GlobalScope::getRootStackSize() const
 {
 	if (!stackSize_)
 	{
-		RootScope* mutableThis = const_cast<RootScope*>(this);
+		GlobalScope* mutableThis = const_cast<GlobalScope*>(this);
 		stackSize_ = calculateStackSize(mutableThis);
 	}
 	return stackSize_;
@@ -715,7 +715,7 @@ optional<int> RootScope::getRootStackSize() const
 
 // Single
 
-Scope* RootScope::getChild(std::string const& name) const
+Scope* GlobalScope::getChild(std::string const& name) const
 {
 	Scope* result = BasicScope::getChild(name);
 	if (!result)
@@ -723,7 +723,7 @@ Scope* RootScope::getChild(std::string const& name) const
 	return result;
 }
 
-DataType const* RootScope::getLocalDataType(string const& name) const
+DataType const* GlobalScope::getLocalDataType(string const& name) const
 {
 	DataType const* result = BasicScope::getLocalDataType(name);
 	if (!result)
@@ -731,14 +731,14 @@ DataType const* RootScope::getLocalDataType(string const& name) const
 	return result;
 }
 
-optional<ScriptType> RootScope::getLocalScriptType(string const& name) const
+optional<ScriptType> GlobalScope::getLocalScriptType(string const& name) const
 {
 	if (optional<ScriptType> result = BasicScope::getLocalScriptType(name))
 		return result;
 	return find<ScriptType>(descScriptTypes_, name);
 }
 
-ZClass* RootScope::getLocalClass(string const& name) const
+ZClass* GlobalScope::getLocalClass(string const& name) const
 {
 	ZClass* result = BasicScope::getLocalClass(name);
 	if (!result)
@@ -746,7 +746,7 @@ ZClass* RootScope::getLocalClass(string const& name) const
 	return result;
 }
 
-Datum* RootScope::getLocalDatum(string const& name) const
+Datum* GlobalScope::getLocalDatum(string const& name) const
 {
 	Datum* result = BasicScope::getLocalDatum(name);
 	if (!result)
@@ -754,7 +754,7 @@ Datum* RootScope::getLocalDatum(string const& name) const
 	return result;
 }
 
-Function* RootScope::getLocalGetter(string const& name) const
+Function* GlobalScope::getLocalGetter(string const& name) const
 {
 	Function* result = BasicScope::getLocalGetter(name);
 	if (!result)
@@ -762,7 +762,7 @@ Function* RootScope::getLocalGetter(string const& name) const
 	return result;
 }
 
-Function* RootScope::getLocalSetter(string const& name) const
+Function* GlobalScope::getLocalSetter(string const& name) const
 {
 	Function* result = BasicScope::getLocalSetter(name);
 	if (!result)
@@ -770,7 +770,7 @@ Function* RootScope::getLocalSetter(string const& name) const
 	return result;
 }
 
-Function* RootScope::getLocalFunction(
+Function* GlobalScope::getLocalFunction(
 		FunctionSignature const& signature) const
 {
 	Function* result = BasicScope::getLocalFunction(signature);
@@ -780,7 +780,7 @@ Function* RootScope::getLocalFunction(
 	return result;
 }
 
-vector<Function*> RootScope::getLocalFunctions(string const& name) const
+vector<Function*> GlobalScope::getLocalFunctions(string const& name) const
 {
 	vector<Function*> results(BasicScope::getLocalFunctions(name));
 	if (optional<vector<Function*> > desc =
@@ -791,28 +791,28 @@ vector<Function*> RootScope::getLocalFunctions(string const& name) const
 
 // All
 
-vector<Datum*> RootScope::getLocalData() const
+vector<Datum*> GlobalScope::getLocalData() const
 {
 	vector<Datum*> results(BasicScope::getLocalData());
 	appendElements(results, getSeconds<Datum*>(descData_));
 	return results;
 }
 
-vector<Function*> RootScope::getLocalFunctions() const
+vector<Function*> GlobalScope::getLocalFunctions() const
 {
 	vector<Function*> results(BasicScope::getLocalFunctions());
 	appendElements(results, getSeconds<Function*>(descFunctionsBySignature_));
 	return results;
 }
 
-vector<Function*> RootScope::getLocalGetters() const
+vector<Function*> GlobalScope::getLocalGetters() const
 {
 	vector<Function*> results(BasicScope::getLocalGetters());
 	appendElements(results, getSeconds<Function*>(descGetters_));
 	return results;
 }
 
-vector<Function*> RootScope::getLocalSetters() const
+vector<Function*> GlobalScope::getLocalSetters() const
 {
 	vector<Function*> results(BasicScope::getLocalSetters());
 	appendElements(results, getSeconds<Function*>(descSetters_));
@@ -821,56 +821,56 @@ vector<Function*> RootScope::getLocalSetters() const
 
 // Register
 
-bool RootScope::registerChild(string const& name, Scope* child)
+bool GlobalScope::registerChild(string const& name, Scope* child)
 {
 	if (getChild(name)) return false;
 	descChildren_[name] = child;
 	return true;
 }
 
-bool RootScope::registerDataType(string const& name, DataType const* type)
+bool GlobalScope::registerDataType(string const& name, DataType const* type)
 {
 	if (getLocalDataType(name)) return false;
 	descDataTypes_[name] = type;
 	return true;
 }
 
-bool RootScope::registerScriptType(std::string const& name, ScriptType type)
+bool GlobalScope::registerScriptType(std::string const& name, ScriptType type)
 {
 	if (getLocalScriptType(name)) return false;
 	descScriptTypes_[name] = type;
 	return true;
 }
 
-bool RootScope::registerClass(string const& name, ZClass* klass)
+bool GlobalScope::registerClass(string const& name, ZClass* klass)
 {
 	if (getLocalClass(name)) return false;
 	descClasses_[name] = klass;
 	return true;
 }
 
-bool RootScope::registerDatum(string const& name, Datum* datum)
+bool GlobalScope::registerDatum(string const& name, Datum* datum)
 {
 	if (getLocalDatum(name)) return false;
 	descData_[name] = datum;
 	return true;
 }
 
-bool RootScope::registerGetter(string const& name, Function* getter)
+bool GlobalScope::registerGetter(string const& name, Function* getter)
 {
 	if (getLocalGetter(name)) return false;
 	descGetters_[name] = getter;
 	return true;
 }
 
-bool RootScope::registerSetter(string const& name, Function* setter)
+bool GlobalScope::registerSetter(string const& name, Function* setter)
 {
 	if (getLocalSetter(name)) return false;
 	descSetters_[name] = setter;
 	return true;
 }
 
-bool RootScope::registerFunction(Function* function)
+bool GlobalScope::registerFunction(Function* function)
 {
 	FunctionSignature signature(*function);
 	if (getLocalFunction(signature)) return false;
