@@ -174,11 +174,6 @@ void RecursiveVisitor::caseScript(ASTScript& host, void* param)
 	visit(host, host.functions, param);
 }
 
-void RecursiveVisitor::caseImportDecl(ASTImportDecl& host, void* param)
-{
-	visit(host.getTree(), param);
-}
-
 void RecursiveVisitor::caseFuncDecl(ASTFuncDecl& host, void* param)
 {
 	visit(host.returnType.get(), param);

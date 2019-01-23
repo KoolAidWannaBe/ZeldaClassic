@@ -54,12 +54,7 @@ ASTProgram::ASTProgram(LocationData const& location) : AST(location) {}
 
 void ASTProgram::execute(ASTVisitor& visitor, void* param)
 {
-	visitor.caseFile(*this, param);
-}
-
-string ASTProgram::asString() const
-{
-	return location.fname;
+	visitor.caseProgram(*this, param);
 }
 
 void ASTProgram::addDeclaration(ASTDecl* declaration)
@@ -96,6 +91,26 @@ bool ASTProgram::hasDeclarations() const
 		|| !scriptTypes.empty()
 		|| !scripts.empty();
 }
+
+ASTProgram& ASTProgram::merge(ASTProgram& other)
+{
+	imports.insert(imports.end(), other.imports.begin(), other.imports.end());
+	other.imports.clear();
+	variables.insert(variables.end(), other.variables.begin(),
+					 other.variables.end());
+	other.variables.clear();
+	functions.insert(functions.end(), other.functions.begin(),
+					 other.functions.end());
+	other.functions.clear();
+	dataTypes.insert(dataTypes.end(), other.dataTypes.begin(), other.dataTypes.end());
+	other.dataTypes.clear();
+	scriptTypes.insert(scriptTypes.end(), other.scriptTypes.begin(), other.scriptTypes.end());
+	other.scriptTypes.clear();
+	scripts.insert(scripts.end(), other.scripts.begin(), other.scripts.end());
+	other.scripts.clear();
+	return *this;
+}
+
 
 // ASTFloat
 

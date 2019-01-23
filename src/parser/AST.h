@@ -252,13 +252,18 @@ namespace ZScript
 	{
 	public:
 		ASTProgram(LocationData const& location = LocationData::NONE);
-		virtual ASTProgram* clone() const {return new ASTProgram(*this);}
+			ASTProgram(ASTProgram const& base);
+		~ASTProgram();
+			ASTProgram& operator=(ASTProgram const& rhs);
+			ASTProgram* clone() const {return new ASTProgram(*this);}
     
-		virtual void execute(ASTVisitor& visitor, void* param = NULL);
-		virtual std::string asString() const;
+		void execute(ASTVisitor& visitor, void* param = NULL);
 
 		// Add a declaration to the proper list based on its type.
 		void addDeclaration(ASTDecl* declaration);
+		// Steal all the contents of other.
+		ASTProgram& merge(ASTProgram& other);
+	
 		bool hasDeclarations() const;
 
 		owning_vector<ASTSetOption> options;
@@ -575,15 +580,8 @@ namespace ZScript
 		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
 		Type getDeclarationType() const /*override*/ {return TYPE_IMPORT;}
-
-		std::string const& getFilename() const {return filename_;}
-		ASTProgram* getTree() {return tree_.get();}
-		ASTProgram const* getTree() const {return tree_.get();}
-		void giveTree(ASTProgram* tree) {tree_ = tree;}
-	
-	private:
+		
 		std::string filename_;
-		owning_ptr<ASTProgram> tree_;
 	};
 
 	class ASTFuncDecl : public ASTDecl

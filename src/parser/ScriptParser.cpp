@@ -23,6 +23,8 @@ using namespace std;
 using namespace ZScript;
 //#define PARSER_DEBUG
 
+ASTProgram* resAST;
+
 ScriptsData* compile(string const& filename);
 
 #ifdef PARSER_DEBUG
@@ -134,25 +136,25 @@ bool ScriptParser::preprocess(ASTProgram* root, int reclimit)
         
 	// Repeat parsing process for each of import files
 	for (vector<ASTImportDecl*>::iterator it = root->imports.begin();
-	     it != root->imports.end(); ++it)
+	     it != root->imports.end(); it = imports.erase(it))
 	{
-		ASTImportDecl& importDecl = **it;
+		auto_ptr<ASTImportDecl> importDecl(*it);
 
 		// Parse the imported file.
-		string filename = prepareFilename(importDecl.getFilename());
-		auto_ptr<ASTProgram> imported(parseFile(filename));
-		if (!imported.get())
+		string filename = prepareFilename(importDecl->filename);
+		auto_ptr<ASTProgram> importRoot(parseFile(filename));
+		if (!importRoot.get())
 		{
-			box_out_err(CompileError::CantOpenImport(&importDecl, filename));
+			box_out_err(CompileError::CantOpenImport(*it, filename));
 			return false;
 		}
-
-		// Save the AST in the import declaration.
-		importDecl.giveTree(imported.release());
 		
 		// Recurse on imports.
-		if (!preprocess(importDecl.getTree(), reclimit - 1))
+		if (!preprocess(importDecl.get(), reclimit - 1))
 			return false;
+		
+		// Put the imported code into the parent.
+		root->merge(*importRoot);
 	}
     
 	return true;
