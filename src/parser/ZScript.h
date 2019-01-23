@@ -20,7 +20,7 @@ namespace ZScript
 	class BuiltinVariable;
 	class Function;
 	class Scope;
-	class RootScope;
+	class GlobalScope;
 	class ScriptScope;
 	class FunctionScope;
 	
@@ -33,15 +33,14 @@ namespace ZScript
 		Program(ASTProgram&, CompileErrorHandler*);
 		~Program();
 
-		ASTProgram& getRoot() {return root_;}
+		ASTProgram& getNode() {return node;}
 		TypeStore const& getTypeStore() const {return typeStore_;}
 		TypeStore& getTypeStore() {return typeStore_;}
-		RootScope& getScope() const {return *rootScope_;}
+		GlobalScope& getScope() const {return *globalScope;}
 
 		std::vector<Script*> scripts;
 		Script* getScript(std::string const& name) const;
 		Script* getScript(ASTScript* node) const;
-		Script* addScript(ASTScript&, Scope&, CompileErrorHandler*);
 
 		// Gets the non-internal (user-defined) global scope functions.
 		std::vector<Function*> getUserGlobalFunctions() const;
@@ -59,7 +58,7 @@ namespace ZScript
 		std::map<ASTScript*, Script*> scriptsByNode_;
 
 		TypeStore typeStore_;
-		RootScope* rootScope_;
+		GlobalScope* globalScope;
 		ASTProgram& root_;
 	};
 
@@ -95,7 +94,7 @@ namespace ZScript
 	class UserScript : public Script
 	{
 		friend UserScript* createScript(
-				Program&, Scope&, ASTScript&, CompileErrorHandler*);
+				Program&, ASTScript&, CompileErrorHandler*);
 
 	public:
 		ScriptType getType() const /*override*/;
@@ -114,7 +113,7 @@ namespace ZScript
 	class BuiltinScript : public Script
 	{
 		friend BuiltinScript* createScript(
-				Program&, Scope&, ScriptType, std::string const& name,
+				Program&, ScriptType, std::string const& name,
 				CompileErrorHandler*);
 
 	public:
@@ -133,9 +132,9 @@ namespace ZScript
 	};
 
 	UserScript* createScript(
-			Program&, Scope&, ASTScript&, CompileErrorHandler* = NULL);
+			Program&, ASTScript&, CompileErrorHandler* = NULL);
 	BuiltinScript* createScript(
-			Program&, Scope&, ScriptType, std::string const& name,
+			Program&, ScriptType, std::string const& name,
 			CompileErrorHandler* = NULL);
 	
 	Function* getRunFunction(Script const&);

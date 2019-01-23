@@ -14,13 +14,25 @@ using namespace ZScript;
 ////////////////////////////////////////////////////////////////
 // ZScript::Program
 
-Program::Program(ASTProgram& root, CompileErrorHandler* errorHandler)
-	: root_(root), rootScope_(new RootScope(typeStore_))
+Program::Program(ASTProgram& node, CompileErrorHandler* errorHandler)
+	: node(node), globalScope(new GlobalScope(typeStore_))
 {
+	// Create a ZScript::Script for every script in the program.
+	for (vector<ASTScript*>::const_iterator it = node.scripts.begin();
+		 it != node.scripts.end(); ++it)
+	{
+		Script* script = createScript(*this, **it, errorHandler);
+		if (!script) continue;
+
+		scripts.push_back(script);
+		scriptsByName[script->getName()] = script;
+		scriptsByNode[*it] = script;
+	}
+
 	// Create the ~Init script.
 	if (Script* initScript =
 	    	createScript(
-				*this, *rootScope_, ScriptType::global,
+				*this, ScriptType::global,
 				"~Init", errorHandler))
 	{
 		scripts.push_back(initScript);
@@ -31,34 +43,26 @@ Program::Program(ASTProgram& root, CompileErrorHandler* errorHandler)
 Program::~Program()
 {
 	deleteElements(scripts);
-	delete rootScope_;
+	delete GlobalScope_;
 }
 
 Script* Program::getScript(string const& name) const
 {
-	return find<Script*>(scriptsByName_, name).value_or(NULL);
+	map<string, Script*>::const_iterator it = scriptsByName.find(name);
+	if (it == scriptsByName.end()) return NULL;
+	return it->second;
 }
 
 Script* Program::getScript(ASTScript* node) const
 {
-	return find<Script*>(scriptsByNode_, node).value_or(NULL);
-}
-
-Script* Program::addScript(
-		ASTScript& node, Scope& parentScope, CompileErrorHandler* handler)
-{
-	Script* script = createScript(*this, parentScope, node, handler);
-	if (!script) return NULL;
-
-	scripts.push_back(script);
-	scriptsByName_[script->getName()] = script;
-	scriptsByNode_[&node] = script;
-	return script;
+	map<ASTScript*, Script*>::const_iterator it = scriptsByNode.find(node);
+	if (it == scriptsByNode.end()) return NULL;
+	return it->second;
 }
 
 vector<Function*> Program::getUserGlobalFunctions() const
 {
-	vector<Function*> functions = rootScope_->getLocalFunctions();
+	vector<Function*> functions = globalScope->getLocalFunctions();
 	for (vector<Function*>::iterator it = functions.begin();
 	     it != functions.end();)
 	{
@@ -122,12 +126,11 @@ BuiltinScript::BuiltinScript(
 // ZScript
 
 UserScript* ZScript::createScript(
-		Program& program, Scope& parentScope, ASTScript& node,
-		CompileErrorHandler* errorHandler)
+		Program& program, ASTScript& node, CompileErrorHandler* errorHandler)
 {
 	UserScript* script = new UserScript(program, node);
 
-	ScriptScope* scope = parentScope.makeScriptChild(*script);
+	ScriptScope* scope = program.getScope().makeScriptChild(*script);
 	if (!scope)
 	{
 		if (errorHandler)

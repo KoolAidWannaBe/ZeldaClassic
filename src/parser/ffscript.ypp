@@ -28,6 +28,7 @@ extern char* yytext;
 extern int yyleng;
 extern int yylex(void);
 extern FILE *yyin;
+extern ASTProgram *resAST;
 extern void resetLexer();
 void yyerror(ASTProgram*& root, const char* s);
 void yymsg(string const& message, int row = yyrow, int col = yycol);
