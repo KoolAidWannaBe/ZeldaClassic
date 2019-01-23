@@ -14,7 +14,7 @@ using namespace ZScript;
 ////////////////////////////////////////////////////////////////
 // ZScript::Program
 
-Program::Program(ASTFile& root, CompileErrorHandler* errorHandler)
+Program::Program(ASTProgram& root, CompileErrorHandler* errorHandler)
 	: root_(root), rootScope_(new RootScope(typeStore_))
 {
 	// Create the ~Init script.

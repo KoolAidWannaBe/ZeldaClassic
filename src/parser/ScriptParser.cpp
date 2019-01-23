@@ -50,7 +50,7 @@ ScriptsData* ZScript::compile(string const& filename)
 	box_out("Pass 1: Parsing");
 	box_eol();
 
-	auto_ptr<ASTFile> root(parseFile(filename));
+	auto_ptr<ASTProgram> root(parseFile(filename));
 	if (!root.get())
 	{
 		box_out_err(CompileError::CantOpenSource(NULL));
@@ -122,7 +122,7 @@ string ScriptParser::prepareFilename(string const& filename)
 	return retval;
 }
         
-bool ScriptParser::preprocess(ASTFile* root, int reclimit)
+bool ScriptParser::preprocess(ASTProgram* root, int reclimit)
 {
 	assert(root);
 	
@@ -140,7 +140,7 @@ bool ScriptParser::preprocess(ASTFile* root, int reclimit)
 
 		// Parse the imported file.
 		string filename = prepareFilename(importDecl.getFilename());
-		auto_ptr<ASTFile> imported(parseFile(filename));
+		auto_ptr<ASTProgram> imported(parseFile(filename));
 		if (!imported.get())
 		{
 			box_out_err(CompileError::CantOpenImport(&importDecl, filename));

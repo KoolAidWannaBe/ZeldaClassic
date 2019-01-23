@@ -23,7 +23,7 @@ namespace ZScript
 
 		////////////////
 		// Cases
-		void caseFile(ASTFile& host, void* = NULL);
+		void caseFile(ASTProgram& host, void* = NULL);
 		void caseSetOption(ASTSetOption& host, void* param = NULL);
 		// Statements
 		void caseBlock(ASTBlock& host, void* = NULL);

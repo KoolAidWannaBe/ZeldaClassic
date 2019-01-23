@@ -30,10 +30,10 @@ namespace ZScript
 	class Program : private NoCopy
 	{
 	public:
-		Program(ASTFile&, CompileErrorHandler*);
+		Program(ASTProgram&, CompileErrorHandler*);
 		~Program();
 
-		ASTFile& getRoot() {return root_;}
+		ASTProgram& getRoot() {return root_;}
 		TypeStore const& getTypeStore() const {return typeStore_;}
 		TypeStore& getTypeStore() {return typeStore_;}
 		RootScope& getScope() const {return *rootScope_;}
@@ -60,7 +60,7 @@ namespace ZScript
 
 		TypeStore typeStore_;
 		RootScope* rootScope_;
-		ASTFile& root_;
+		ASTProgram& root_;
 	};
 
 	// Gets all defined functions.

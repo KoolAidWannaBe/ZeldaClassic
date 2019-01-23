@@ -87,7 +87,7 @@ void SemanticAnalyzer::analyzeFunctionInternals(Function& function)
 	returnType = oldReturnType;
 }
 
-void SemanticAnalyzer::caseFile(ASTFile& host, void*)
+void SemanticAnalyzer::caseFile(ASTProgram& host, void*)
 {
 	scope = scope->makeFileChild(host.asString());
 	RecursiveVisitor::caseFile(host);

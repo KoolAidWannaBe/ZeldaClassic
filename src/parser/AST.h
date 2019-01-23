@@ -49,7 +49,7 @@ namespace ZScript
 
 	// Local
 	class AST; // virtual
-	class ASTFile;
+	class ASTProgram;
 	class ASTFloat;
 	class ASTString;
 	class ASTSetOption;
@@ -248,11 +248,11 @@ namespace ZScript
 
 	////////////////////////////////////////////////////////////////
 
-	class ASTFile : public AST
+	class ASTProgram : public AST
 	{
 	public:
-		ASTFile(LocationData const& location = LocationData::NONE);
-		virtual ASTFile* clone() const {return new ASTFile(*this);}
+		ASTProgram(LocationData const& location = LocationData::NONE);
+		virtual ASTProgram* clone() const {return new ASTProgram(*this);}
     
 		virtual void execute(ASTVisitor& visitor, void* param = NULL);
 		virtual std::string asString() const;
@@ -577,13 +577,13 @@ namespace ZScript
 		Type getDeclarationType() const /*override*/ {return TYPE_IMPORT;}
 
 		std::string const& getFilename() const {return filename_;}
-		ASTFile* getTree() {return tree_.get();}
-		ASTFile const* getTree() const {return tree_.get();}
-		void giveTree(ASTFile* tree) {tree_ = tree;}
+		ASTProgram* getTree() {return tree_.get();}
+		ASTProgram const* getTree() const {return tree_.get();}
+		void giveTree(ASTProgram* tree) {tree_ = tree;}
 	
 	private:
 		std::string filename_;
-		owning_ptr<ASTFile> tree_;
+		owning_ptr<ASTProgram> tree_;
 	};
 
 	class ASTFuncDecl : public ASTDecl

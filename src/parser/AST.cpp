@@ -48,21 +48,21 @@ AST::AST(LocationData const& location)
 	: location(location), disabled(false)
 {}
 
-// ASTFile
+// ASTProgram
 
-ASTFile::ASTFile(LocationData const& location) : AST(location) {}
+ASTProgram::ASTProgram(LocationData const& location) : AST(location) {}
 
-void ASTFile::execute(ASTVisitor& visitor, void* param)
+void ASTProgram::execute(ASTVisitor& visitor, void* param)
 {
 	visitor.caseFile(*this, param);
 }
 
-string ASTFile::asString() const
+string ASTProgram::asString() const
 {
 	return location.fname;
 }
 
-void ASTFile::addDeclaration(ASTDecl* declaration)
+void ASTProgram::addDeclaration(ASTDecl* declaration)
 {
 	switch (declaration->getDeclarationType())
 	{
@@ -87,7 +87,7 @@ void ASTFile::addDeclaration(ASTDecl* declaration)
 	}
 }
 
-bool ASTFile::hasDeclarations() const
+bool ASTProgram::hasDeclarations() const
 {
 	return !imports.empty()
 		|| !variables.empty()

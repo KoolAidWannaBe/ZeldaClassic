@@ -19,7 +19,7 @@ namespace ZScript
 	// Forward Declarations
 
 	// AST.h
-	class ASTFile;
+	class ASTProgram;
 
 	// ByteCode.h
 	class ArgumentVisitor;
@@ -99,7 +99,7 @@ namespace ZScript
 		{
 			return gid++;
 		}
-		static bool preprocess(ASTFile* root, int reclevel);
+		static bool preprocess(ASTProgram* root, int reclevel);
 		static IntermediateData* generateOCode(FunctionData& fdata);
 		static void assemble(IntermediateData* id);
 		static void initialize();
