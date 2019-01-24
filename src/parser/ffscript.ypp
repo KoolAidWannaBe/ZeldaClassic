@@ -182,6 +182,7 @@ extern YYLTYPE noloc;
  // Others
 %token IDENTIFIER
 %token QUOTEDSTRING
+%token IMPORTSTRING
 %token SINGLECHAR
 %token NUMBER
 
