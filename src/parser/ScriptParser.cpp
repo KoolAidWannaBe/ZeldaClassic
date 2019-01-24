@@ -72,10 +72,11 @@ ScriptsData* ZScript::compile(string const& filename)
 	Program program(*root, &handler);
 	if (handler.hasError())
 		return NULL;
-
+	box_out("After handler.hasError()");box_eol();
 	SemanticAnalyzer semanticAnalyzer(program);
 	if (semanticAnalyzer.hasFailed())
 		return NULL;
+	box_out("After semanticAnalyzer");box_eol();
     
 	FunctionData fd(program);
 	if (fd.globalVariables.size() > MAX_SCRIPT_REGISTERS)
@@ -126,7 +127,7 @@ string ScriptParser::prepareFilename(string const& filename)
         
 bool ScriptParser::preprocess(ASTProgram* root, int reclimit)
 {
-	assert(root);
+	//assert(root);
 	
 	if (reclimit == 0)
 	{
@@ -136,12 +137,12 @@ bool ScriptParser::preprocess(ASTProgram* root, int reclimit)
         
 	// Repeat parsing process for each of import files
 	for (vector<ASTImportDecl*>::iterator it = root->imports.begin();
-	     it != root->imports.end(); it = imports.erase(it))
+	     it != root->imports.end(); ++it)
 	{
 		auto_ptr<ASTImportDecl> importDecl(*it);
 
 		// Parse the imported file.
-		string filename = prepareFilename(importDecl->filename);
+		string filename = prepareFilename(importDecl->filename_);
 		auto_ptr<ASTProgram> importRoot(parseFile(filename));
 		if (!importRoot.get())
 		{
@@ -150,7 +151,7 @@ bool ScriptParser::preprocess(ASTProgram* root, int reclimit)
 		}
 		
 		// Recurse on imports.
-		if (!preprocess(importDecl.get(), reclimit - 1))
+		if (!preprocess(importRoot.get(), reclimit - 1))
 			return false;
 		
 		// Put the imported code into the parent.

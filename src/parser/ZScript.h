@@ -59,7 +59,7 @@ namespace ZScript
 
 		TypeStore typeStore_;
 		GlobalScope* globalScope;
-		ASTProgram& root_;
+		ASTProgram& node;
 	};
 
 	// Gets all defined functions.

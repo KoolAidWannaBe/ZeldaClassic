@@ -252,10 +252,7 @@ namespace ZScript
 	{
 	public:
 		ASTProgram(LocationData const& location = LocationData::NONE);
-			ASTProgram(ASTProgram const& base);
-		~ASTProgram();
-			ASTProgram& operator=(ASTProgram const& rhs);
-			ASTProgram* clone() const {return new ASTProgram(*this);}
+		ASTProgram* clone() const {return new ASTProgram(*this);}
     
 		void execute(ASTVisitor& visitor, void* param = NULL);
 

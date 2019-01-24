@@ -254,7 +254,8 @@ namespace ZScript
 		std::vector<Scope*> getChildren() const;
 	
 		// Lookup Local
-		DataType const* getLocalType(std::string const& name) const;
+		DataType const* getLocalDataType(std::string const& name) const;
+		optional<ScriptType> getLocalScriptType(std::string const& name) const;
 		ZClass* getLocalClass(std::string const& name) const;
 		Datum* getLocalDatum(std::string const& name) const;
 		Function* getLocalGetter(std::string const& name) const;
@@ -263,7 +264,7 @@ namespace ZScript
 				const;
 		std::vector<Function*> getLocalFunctions(std::string const& name)
 				const;
-		optional<long> getLocalOption(CompileOption option) const;
+		CompileOptionSetting getLocalOption(CompileOption option) const;
 		
 		// Get All Local
 		std::vector<ZScript::Datum*> getLocalData() const;

@@ -25,8 +25,8 @@ Program::Program(ASTProgram& node, CompileErrorHandler* errorHandler)
 		if (!script) continue;
 
 		scripts.push_back(script);
-		scriptsByName[script->getName()] = script;
-		scriptsByNode[*it] = script;
+		scriptsByName_[script->getName()] = script;
+		scriptsByNode_[*it] = script;
 	}
 
 	// Create the ~Init script.
@@ -43,20 +43,20 @@ Program::Program(ASTProgram& node, CompileErrorHandler* errorHandler)
 Program::~Program()
 {
 	deleteElements(scripts);
-	delete GlobalScope_;
+	delete globalScope;
 }
 
 Script* Program::getScript(string const& name) const
 {
-	map<string, Script*>::const_iterator it = scriptsByName.find(name);
-	if (it == scriptsByName.end()) return NULL;
+	map<string, Script*>::const_iterator it = scriptsByName_.find(name);
+	if (it == scriptsByName_.end()) return NULL;
 	return it->second;
 }
 
 Script* Program::getScript(ASTScript* node) const
 {
-	map<ASTScript*, Script*>::const_iterator it = scriptsByNode.find(node);
-	if (it == scriptsByNode.end()) return NULL;
+	map<ASTScript*, Script*>::const_iterator it = scriptsByNode_.find(node);
+	if (it == scriptsByNode_.end()) return NULL;
 	return it->second;
 }
 
@@ -141,7 +141,7 @@ UserScript* ZScript::createScript(
 	}
 	script->scope = scope;
 
-	if (!resolveScriptType(*node.type, parentScope).isValid())
+	if (!resolveScriptType(*node.type, program.getScope()).isValid())
 	{
 		if (errorHandler)
 			errorHandler->handleError(
@@ -154,12 +154,12 @@ UserScript* ZScript::createScript(
 }
 
 BuiltinScript* ZScript::createScript(
-		Program& program, Scope& parentScope, ScriptType type,
+		Program& program, ScriptType type,
 		string const& name, CompileErrorHandler* errorHandler)
 {
 	BuiltinScript* script = new BuiltinScript(program, type, name);
 
-	ScriptScope* scope = parentScope.makeScriptChild(*script);
+	ScriptScope* scope = program.getScope().makeScriptChild(*script);
 	if (!scope)
 	{
 		if (errorHandler)

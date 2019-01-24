@@ -13,7 +13,7 @@ namespace ZScript
 	public:
 		virtual void caseDefault(AST& host, void* param = NULL) {}
 		// AST Subclasses
-		virtual void caseFile(ASTProgram& host, void* param = NULL) {
+		virtual void caseProgram(ASTProgram& host, void* param = NULL) {
 			caseDefault(host, param);}
 		virtual void caseFloat(ASTFloat& host, void* param = NULL) {
 			caseDefault(host, param);}
@@ -200,7 +200,7 @@ namespace ZScript
 		// Cases
 	
 		virtual void caseDefault(AST&, void*) {}
-		virtual void caseFile(ASTProgram& host, void* param = NULL);
+		virtual void caseProgram(ASTProgram& host, void* param = NULL);
 		virtual void caseSetOption(ASTSetOption& host, void* param = NULL);
 		// Statements
 		virtual void caseBlock(ASTBlock& host, void* param = NULL);
@@ -215,7 +215,6 @@ namespace ZScript
 				ASTStmtReturnVal& host, void* param = NULL);
 		// Declarations
 		virtual void caseScript(ASTScript& host, void* param = NULL);
-		virtual void caseImportDecl(ASTImportDecl& host, void* param = NULL);
 		virtual void caseFuncDecl(ASTFuncDecl& host, void* param = NULL);
 		virtual void caseDataDeclList(ASTDataDeclList& host, void* param = NULL);
 		virtual void caseDataDecl(ASTDataDecl& host, void* param = NULL);

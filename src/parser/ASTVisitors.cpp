@@ -70,7 +70,7 @@ void RecursiveVisitor::visit(AST* node, void* param)
 ////////////////////////////////////////////////////////////////
 // Cases
 
-void RecursiveVisitor::caseFile(ASTProgram& host, void* param)
+void RecursiveVisitor::caseProgram(ASTProgram& host, void* param)
 {
 	visit(host, host.options, param);
 	if (breakRecursion(host, param)) return;

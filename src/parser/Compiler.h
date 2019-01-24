@@ -100,7 +100,6 @@ namespace ZScript
 			return gid++;
 		}
 		static bool preprocess(ASTProgram* theAST, int reclevel);
-		static SymbolData* buildSymbolTable(ASTProgram* theAST);
 		static IntermediateData* generateOCode(FunctionData& fdata);
 		static void assemble(IntermediateData* id);
 		static void initialize();

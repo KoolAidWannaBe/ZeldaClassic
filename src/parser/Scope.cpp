@@ -434,21 +434,21 @@ bool BasicScope::add(Datum& datum, CompileErrorHandler* errorHandler)
 {
 	if (optional<string> name = datum.getName())
 	{
-		if (find<Datum*>(namedData, *name))
+		if (find<Datum*>(namedData_, *name))
 		{
 			if (errorHandler)
 				errorHandler->handleError(
-						CompileError::VarRedef, datum.getNode(),
-						name->c_str());
+						CompileError::VarRedef(datum.getNode(),
+						name->c_str()));
 			return false;
 		}
-		namedData[*name] = &datum;
+		namedData_[*name] = &datum;
 	}
-	else anonymousData.push_back(&datum);
+	else anonymousData_.push_back(&datum);
 
 	if (!ZScript::isGlobal(datum))
 	{
-		stackOffsets[&datum] = stackDepth++;
+		stackOffsets_[&datum] = stackDepth_++;
 		invalidateStackSize();
 	}
 
@@ -535,6 +535,7 @@ int calculateStackSize(Scope* scope)
 		int size = calculateStackSize(*it);
 		if (greatestSize < size) greatestSize = size;
 	}
+	return greatestSize;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -589,9 +590,9 @@ GlobalScope::GlobalScope(TypeStore& typeStore)
 ScriptScope* GlobalScope::makeScriptChild(Script& script)
 {
 	string name = script.getName();
-	if (find<Scope*>(children, name)) return NULL;
+	if (find<Scope*>(children_, name)) return NULL;
 	ScriptScope* child = new ScriptScope(this, script);
-	children[name] = child;
+	children_[name] = child;
 	return child;
 }
 
