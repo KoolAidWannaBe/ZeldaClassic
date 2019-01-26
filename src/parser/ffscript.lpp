@@ -10,6 +10,8 @@
 %x STRING
 %x IMPORTING
 %x IMPORTSTR
+%x CHAR
+%x CHARESC
 %s HASH
 
 %{
@@ -311,8 +313,89 @@ link	TOKEN( LINK );
 }
 
  /* Char */
-\'[^\']?\' {
-	VALUE( SINGLECHAR, ASTString(yytext, yylloc) );
+<INITIAL>\' {
+	BEGIN( CHAR );
+	qstr.str(""); /* Clear qstr */
+	srow = yyrow;
+	scol = yycol;
+	ADVANCE;
+}
+
+<CHAR>{
+	<<EOF>>		{
+		yymsg("ERROR: Character literal does not end.", srow, scol);
+		return 0;
+	}
+	[^\']*\n		{
+		yymsg("ERROR: Character literal does not end.", srow, scol);
+		return 0;
+	}
+	[^\'\\]{2,}\'	{
+		yymsg("ERROR: Character literal has too many characters.", srow, scol);
+		return 0;
+	}
+	[^\'\\]?\' {
+		ADVANCE;
+		yytext[yyleng - 1] = 0; /* Remove the '''. */
+		qstr << yytext;
+		BEGIN( INITIAL );
+		yylloc.first_line = srow;
+		yylloc.first_column = scol;
+		yylloc.last_line = yyrow;
+		yylloc.last_column = yycol;
+		yylval = new ASTString(qstr.str(), yylloc);
+		return TOK_SINGLECHAR;
+	}
+	\\ {
+		// Remove the '\'
+		yytext[yyleng - 1] = 0;
+		// Read in the escaped character.
+		register int c = yyinput();
+		switch (c) {
+		case 'a': ESC_CHAR('\a');
+		case 'b': ESC_CHAR('\b');
+		case 'f': ESC_CHAR('\f');
+		case 'n': ESC_CHAR('\n');
+		case 'r': ESC_CHAR('\r');
+		case 't': ESC_CHAR('\t');
+		case 'v': ESC_CHAR('\v');
+		case '\n': 
+			yymsg("ERROR: Character literal does not end.", srow, scol);
+			return 0;
+		case EOF:
+			yymsg("ERROR: Character literal does not end.", srow, scol);
+			return 0;
+		default: ESC_CHAR((char)c);
+		}
+		BEGIN( CHARESC );
+	}
+}
+
+<CHARESC>{
+	\'	{
+		ADVANCE;
+		yytext[yyleng - 1] = 0; /* Remove the '''. */
+		qstr << yytext;
+		BEGIN( INITIAL );
+		yylloc.first_line = srow;
+		yylloc.first_column = scol;
+		yylloc.last_line = yyrow;
+		yylloc.last_column = yycol;
+		yylval = new ASTString(qstr.str(), yylloc);
+		return TOK_SINGLECHAR;
+	}
+	[^\']+\'	{
+		yymsg("ERROR: Character literal has too many characters.", srow, scol);
+		return 0;
+	}
+	<<EOF>>			{
+		yymsg("ERROR: Character literal does not end.", srow, scol);
+		return 0;
+	}
+	[^\']*\n		{
+		yymsg("ERROR: Character literal does not end.", srow, scol);
+		return 0;
+	}
 }
 
  /* Whitespace */
