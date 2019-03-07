@@ -74,15 +74,15 @@ void RecursiveVisitor::caseFile(ASTFile& host, void* param)
 {
 	visit(host, host.options, param);
 	if (breakRecursion(host, param)) return;
-	visit(host, host.imports, param);
-	if (breakRecursion(host, param)) return;
 	visit(host, host.dataTypes, param);
+	if (breakRecursion(host, param)) return;
+	visit(host, host.scriptTypes, param);
+	if (breakRecursion(host, param)) return;
+	visit(host, host.imports, param);
 	if (breakRecursion(host, param)) return;
 	visit(host, host.variables, param);
 	if (breakRecursion(host, param)) return;
 	visit(host, host.functions, param);
-	if (breakRecursion(host, param)) return;
-	visit(host, host.scriptTypes, param);
 	if (breakRecursion(host, param)) return;
 	visit(host, host.scripts, param);
 }
@@ -189,6 +189,13 @@ void RecursiveVisitor::caseFuncDecl(ASTFuncDecl& host, void* param)
 }
 
 void RecursiveVisitor::caseDataDeclList(ASTDataDeclList& host, void* param)
+{
+	visit(host.baseType.get(), param);
+	if (breakRecursion(host, param)) return;
+	visit(host, host.getDeclarations(), param);
+}
+
+void RecursiveVisitor::caseDataEnum(ASTDataEnum& host, void* param)
 {
 	visit(host.baseType.get(), param);
 	if (breakRecursion(host, param)) return;

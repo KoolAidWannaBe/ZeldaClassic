@@ -103,7 +103,7 @@ void SemanticAnalyzer::caseSetOption(ASTSetOption& host, void*)
 	// If the option name is "all", set the default option instead.
 	if (host.name == "all")
 	{
-		CompileOptionSetting setting = host.getSetting(this);
+		CompileOptionSetting setting = host.getSetting(this, scope);
 		if (!setting) return; // error
 		scope->setDefaultOption(setting);
 		return;
@@ -117,7 +117,7 @@ void SemanticAnalyzer::caseSetOption(ASTSetOption& host, void*)
 	}
 
 	// Set the option to the provided value.
-	CompileOptionSetting setting = host.getSetting(this);
+	CompileOptionSetting setting = host.getSetting(this, scope);
 	if (!setting) return; // error
 	scope->setOption(host.option, setting);
 }
@@ -260,6 +260,35 @@ void SemanticAnalyzer::caseDataDeclList(ASTDataDeclList& host, void*)
 	visit(host, host.getDeclarations());
 }
 
+void SemanticAnalyzer::caseDataEnum(ASTDataEnum& host, void*)
+{
+	//This should always be `DataType::CFLOAT`, but let's put the type checks here just in case... -V
+	// Resolve the base type.
+	DataType const& baseType = host.baseType->resolve(*scope);
+	if (!baseType.isResolved())
+	{
+		handleError(CompileError::UnresolvedType(&host, baseType.getName()));
+		return;
+	}
+
+	// Don't allow void type.
+	if (baseType == DataType::ZVOID)
+	{
+		handleError(CompileError::VoidVar(&host, host.asString()));
+		return;
+	}
+
+	// Check for disallowed global types.
+	if (scope->isGlobal() && !baseType.canBeGlobal())
+	{
+		handleError(CompileError::RefVar(&host, baseType.getName()));
+		return;
+	}
+
+	// Recurse on list contents.
+	visit(host, host.getDeclarations());
+}
+
 void SemanticAnalyzer::caseDataDecl(ASTDataDecl& host, void*)
 {
 	// First do standard recursing.
@@ -299,7 +328,7 @@ void SemanticAnalyzer::caseDataDecl(ASTDataDecl& host, void*)
 
 	// Is it a constant?
 	bool isConstant = false;
-	if (type == DataType::CONST_FLOAT)
+	if (type.isConstant())
 	{
 		// A constant without an initializer doesn't make sense.
 		if (!host.getInitializer())
@@ -309,7 +338,13 @@ void SemanticAnalyzer::caseDataDecl(ASTDataDecl& host, void*)
 		}
 
 		// Inline the constant if possible.
-		isConstant = host.getInitializer()->getCompileTimeValue(this);
+		isConstant = host.getInitializer()->getCompileTimeValue(this, scope);
+		//The dataType is constant, but the initializer is not. This is not allowed in Global or Script scopes, as it causes crashes. -V
+		if(!isConstant && (scope->isGlobal() || scope->isScript()))
+		{
+			handleError(CompileError::ConstNotConstant(&host, host.name));
+			return;
+		}
 	}
 
 	if (isConstant)
@@ -320,7 +355,7 @@ void SemanticAnalyzer::caseDataDecl(ASTDataDecl& host, void*)
 			return;
 		}
 		
-		long value = *host.getInitializer()->getCompileTimeValue(this);
+		long value = *host.getInitializer()->getCompileTimeValue(this, scope);
 		Constant::create(*scope, host, type, value, this);
 	}
 	
@@ -368,10 +403,24 @@ void SemanticAnalyzer::caseDataDeclExtraArray(
 		}
 
 		// Make sure that the size is constant.
-		if (!size.getCompileTimeValue(this))
+		if (!size.getCompileTimeValue(this, scope))
 		{
 			handleError(CompileError::ExprNotConstant(&host));
 			return;
+		}
+		
+		if(optional<long> theSize = size.getCompileTimeValue(this, scope))
+		{
+			if(*theSize % 10000)
+			{
+				handleError(CompileError::ArrayDecimal(&host));
+			}
+			theSize = (*theSize / 10000);
+			if(*theSize < 1 || *theSize > 214748)
+			{
+				handleError(CompileError::ArrayInvalidSize(&host));
+				return;
+			}
 		}
 	}
 }
@@ -468,7 +517,7 @@ void SemanticAnalyzer::caseExprConst(ASTExprConst& host, void*)
 	RecursiveVisitor::caseExprConst(host);
 	if (breakRecursion(host)) return;
 
-	if (!host.getCompileTimeValue())
+	if (!host.getCompileTimeValue(this, scope))
 	{
 		handleError(CompileError::ExprNotConstant(&host));
 		return;
@@ -504,7 +553,7 @@ void SemanticAnalyzer::caseExprAssign(ASTExprAssign& host, void*)
 	checkCast(*rtype, *ltype, &host);
 	if (breakRecursion(host)) return;	
 
-	if (*ltype == DataType::CONST_FLOAT)
+	if (ltype->isConstant())
 		handleError(CompileError::LValConst(&host, host.left->asString()));
 	if (breakRecursion(host)) return;	
 }
@@ -523,7 +572,7 @@ void SemanticAnalyzer::caseExprIdentifier(
 	// Can't write to a constant.
 	if (param == paramWrite || param == paramReadWrite)
 	{
-		if (host.binding->type == DataType::CONST_FLOAT)
+		if (host.binding->type.isConstant())
 		{
 			handleError(CompileError::LValConst(&host, host.asString()));
 			return;
@@ -705,11 +754,9 @@ void SemanticAnalyzer::caseExprCall(ASTExprCall& host, void*)
 		int castCount = 0;
 		for (int i = 0; i < parameterTypes.size(); ++i)
 		{
-			DataType const& from = getBaseType(*parameterTypes[i]);
-			DataType const& to = getBaseType(*function.paramTypes[i]);
+			DataType const& from = getNaiveType(*parameterTypes[i]);
+			DataType const& to = getNaiveType(*function.paramTypes[i]);
 			if (from == to) continue;
-			if (from == DataType::CONST_FLOAT && to == DataType::FLOAT)
-				continue;
 			++castCount;
 		}
 
@@ -757,7 +804,7 @@ void SemanticAnalyzer::caseExprCall(ASTExprCall& host, void*)
 	}
 
 	// Is this a call to a disabled tracing function?
-	if (!*lookupOption(*scope, CompileOption::OPT_trace)
+	if (!*lookupOption(*scope, CompileOption::OPT_LOGGING)
 	    && bestFunctions.front()->isTracing())
 	{
 		host.disable();
@@ -951,7 +998,7 @@ void SemanticAnalyzer::caseArrayLiteral(ASTArrayLiteral& host, void*)
 		handleError(CompileError::ArrayLiteralResize(&host));
 		return;
 	}
-
+	
 	// If present, resolve the explicit type.
 	if (host.type)
 	{
@@ -977,12 +1024,12 @@ void SemanticAnalyzer::caseArrayLiteral(ASTArrayLiteral& host, void*)
 						DataTypeArray(elementType)));
 	}
 
-	// Otherwise, grab the type from the first element.
+	// Otherwise, default to Untyped -V
 	else
 	{
 		host.setReadType(
 				program.getTypeStore().getCanonicalType(
-						DataTypeArray(*host.elements[0]->getReadType())));
+						DataTypeArray(DataType::UNTYPED)));
 	}
 
 	// If initialized, check that each element can be cast to type.
